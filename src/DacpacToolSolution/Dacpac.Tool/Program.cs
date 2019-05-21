@@ -1,23 +1,19 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.SqlServer.Dac;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using Microsoft.Build.Globbing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.SqlServer.Dac;
 
 namespace Dacpac.Tool
 {
-    class Program
+    internal class Program
     {
         private static IConfiguration _configuration;
 
-
-
         public const string DacDeployOptionsKey = "DacDeployOptions";
 
-
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             args = args?.SkipWhile(string.IsNullOrWhiteSpace).ToArray();
 
@@ -27,7 +23,6 @@ namespace Dacpac.Tool
 #if DEBUG
                 Main(Console.ReadLine()?.Split(" "));
 #endif
-
             }
             else if (args[0].Equals("publish", StringComparison.CurrentCultureIgnoreCase))
             {
@@ -38,13 +33,10 @@ namespace Dacpac.Tool
             Finished();
         }
 
-
-        static void Finished()
+        private static void Finished()
         {
-
             Console.WriteLine("Good bye!");
-            Thread.Sleep(2000);
-
+            Thread.Sleep(200);
         }
 
         private static void Publish()
@@ -53,14 +45,6 @@ namespace Dacpac.Tool
                          new DacDeployOptions();
             var dacPackageOptions = _configuration.Get<DacPackageOptions>() ??
                                     new DacPackageOptions();
-
-            var envs = _configuration.AsEnumerable().ToArray();
-          #if DEBUG
-            foreach (var env in envs)
-            {
-                Console.WriteLine($"{env.Key}={env.Value}");
-            }
-            #endif
 
             var package = dacPackageOptions.FindDacPackage();
             foreach (var connection in dacPackageOptions.Connections)
@@ -72,7 +56,6 @@ namespace Dacpac.Tool
                 dacService.Deploy(package, connection.Key, true, option);
                 Console.WriteLine("Finished {0}", connection.Key);
             }
-
         }
 
         private static void DacService_ProgressChanged(object sender, DacProgressEventArgs e)
@@ -82,12 +65,10 @@ namespace Dacpac.Tool
             {
                 Console.WriteLine("-".PadRight(15, '-'));
             }
-
         }
 
-        static string Version()
+        private static string Version()
         {
-
             var versionString = Assembly.GetEntryAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 .InformationalVersion
@@ -95,16 +76,12 @@ namespace Dacpac.Tool
             return versionString;
         }
 
-        static void ConfigurationBuild(string[] args)
+        private static void ConfigurationBuild(string[] args)
         {
             _configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                   .AddEnvironmentVariables()
                   .AddCommandLine(args)
                   .Build();
-
-
         }
-
     }
-
 }

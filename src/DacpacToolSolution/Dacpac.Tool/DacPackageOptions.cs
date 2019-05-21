@@ -10,7 +10,7 @@ namespace Dacpac.Tool
         private const string DefaultPassword = "IFromBrazilian";
         private bool _connectionIsLoad = false;
         private string _dataBaseNames = "";
-  
+
         public IDictionary<string, string> Connections { get; set; } = new Dictionary<string, string>();
 
         /// <summary>Lista de banco de dados que deve ser atualizada/criado</summary>
@@ -47,53 +47,30 @@ namespace Dacpac.Tool
         /// <summary>Find by dacpac file in directory</summary>
         public Microsoft.SqlServer.Dac.DacPackage FindDacPackage()
         {
-            string path = DacPath, fileNamePattern = NamePattern;
 
-            // Read the arguments sended by user
-            if (string.IsNullOrWhiteSpace(path))
+            if (TryGetFiles(out string[] files) && files.Any())
             {
-                path = Environment.CurrentDirectory;
-                Console.WriteLine("Your no send the dacpac path, we will search in {0}", path);
-            }
 
-            if (string.IsNullOrWhiteSpace(fileNamePattern))
-            {
-                fileNamePattern = @"*.dacpac";
-                Console.WriteLine("Your no send the dacpac pattern name, we will search by {0}", fileNamePattern);
-            }
+                try
+                {
+                    Console.WriteLine("Found file: {0}", files[0]);
+                    var packge = Microsoft.SqlServer.Dac.DacPackage.Load(files[0]);
+                    LoadConnectionStrins();
+                    return packge;
 
-            if (!TryGetFiles(path, fileNamePattern, out string[] files) || !files.Any())
-            {
-                //TODO: write help
-                Console.Error.WriteLine("No file find: {0}/{1}", path, fileNamePattern);
-                return null;
+                    //TODO: write message
+                }
+                catch (TypeInitializationException typeInitializationException)
+                {
+                    Console.Error.WriteLine("An error on read dacpac file: {0}/{1}", DacPath, NamePattern);
+                    Console.Error.WriteLine("Exception Details: {0}", typeInitializationException);
+                }
+                catch (Exception exception)
+                {
+                    Console.Error.WriteLine("An error on read dacpac file: {0}/{1}", DacPath, NamePattern);
+                    Console.Error.WriteLine("Exception Details: {0}", exception);
+                }
             }
-            if (files.Length > 1)
-            {
-                //TODO: write help
-                Console.Error.WriteLine("No can exists multiple files per pattern in directory: {0}/{1}", path, fileNamePattern);
-                return null;
-            }
-            try
-            {
-                Console.WriteLine("Found file: {0}", files[0]);
-                var packge = Microsoft.SqlServer.Dac.DacPackage.Load(files[0]);
-                LoadConnectionStrins();
-                return packge;
-
-                //TODO: write message
-            }
-            catch (TypeInitializationException typeInitializationException)
-            {
-                Console.Error.WriteLine("An error on read dacpac file: {0}/{1}", path, fileNamePattern);
-                Console.Error.WriteLine("Exception Details: {0}", typeInitializationException);
-            }
-            catch (Exception exception)
-            {
-                Console.Error.WriteLine("An error on read dacpac file: {0}/{1}", path, fileNamePattern);
-                Console.Error.WriteLine("Exception Details: {0}", exception);
-            }
-
             return null;
         }
 
@@ -114,7 +91,7 @@ namespace Dacpac.Tool
             }
             foreach (var dbName in _dataBaseNames.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (UseSspi)
+                if (UseSspi && (string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId)))
                 {
                     Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";
                 }
@@ -133,13 +110,28 @@ namespace Dacpac.Tool
         /// <param name="filePattern">The file pattern.</param>
         /// <param name="files"></param>
         /// <returns></returns>
-        private bool TryGetFiles(string path, string filePattern, out string[] files)
+        private bool TryGetFiles(out string[] files)
         {
+            string path = DacPath, fileNamePattern = NamePattern;
+
+            // Read the arguments sended by user
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                path = Environment.CurrentDirectory;
+                Console.WriteLine("Your no send the dacpac path, we will search in {0}", path);
+            }
+
+            if (string.IsNullOrWhiteSpace(fileNamePattern))
+            {
+                fileNamePattern = @"*.dacpac";
+                Console.WriteLine("Your no send the dacpac pattern name, we will search by {0}", fileNamePattern);
+            }
+
             files = new string[0];
             try
             {
                 //TODO: write the throw code
-                files = Directory.GetFiles(path, filePattern, new EnumerationOptions()
+                files = Directory.GetFiles(path, fileNamePattern, new EnumerationOptions()
                 {
                     IgnoreInaccessible = true,
                     MatchCasing = MatchCasing.CaseInsensitive,
@@ -147,6 +139,23 @@ namespace Dacpac.Tool
                 })
                     .Distinct()
                     .ToArray();
+
+                if (files.Length == 0)
+                {
+                    //TODO: write help
+                    Console.Error.WriteLine("No file find: {0}/{1}", path, fileNamePattern);
+                    return false;
+
+                }
+                else if (files.Length > 1)
+                {
+                    //TODO: write help
+                    Console.Error.WriteLine("No can exists multiple files per pattern in directory: {0}/{1}", path, fileNamePattern);
+                    return false;
+                }
+
+
+
                 return true;
             }
             catch (UnauthorizedAccessException ex)
