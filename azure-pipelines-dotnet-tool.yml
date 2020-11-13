@@ -15,26 +15,20 @@ name: $(versionBase).$(Build.BuildId)
 
 jobs:
   - job: BUILD
-    displayName: Build and Nuget Push
+    displayName: Generate Nuget package
     pool: 
       vmImage: ubuntu-latest      
     steps:
     - task: DotNetCoreCLI@2
-      displayName: dotnet build
       inputs:
-        workingDirectory: src/DacpacToolSolution/
-        arguments: '/p:Version=$(tool_version) /p:PackageVersion=$(tool_version)'
-    
-    - task: DotNetCoreCLI@2
-      displayName: dotnet pack
-      inputs:
-        command: pack
-        workingDirectory: src/DacpacToolSolution/
-        packagesToPack: 'Dacpac.Tool/Dacpac.Tool.csproj'
-        versioningScheme: 'Off'
+        command: 'pack'
+        packagesToPack: 'Dacpac.Tool'
         packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
+        includesymbols: true
+        versioningScheme: 'Off'
         buildProperties: 'PackageVersion=$(tool_version)'
-        verbosityPack: Normal
+        verbosityPack: 'Normal'
+        workingDirectory: src/DacpacToolSolution/
     
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact'
