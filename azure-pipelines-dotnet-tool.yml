@@ -19,16 +19,11 @@ jobs:
     pool: 
       vmImage: ubuntu-latest      
     steps:
-    - task: DotNetCoreCLI@2
+    - task: Bash@3
       inputs:
-        command: 'pack'
-        packagesToPack: 'Dacpac.Tool'
-        packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
-        includesymbols: true
-        versioningScheme: 'Off'
-        buildProperties: 'PackageVersion=$(tool_version)'
-        verbosityPack: 'Normal'
-        workingDirectory: src/DacpacToolSolution/
+        targetType: 'inline'
+        script: 'dotnet pack Dacpac.Tool.csproj /p:Version=$(tool_version) /p:PackageVersion=$(tool_version) -o $(Build.ArtifactStagingDirectory)/artifact'
+        workingDirectory: 'src/DacpacToolSolution/Dacpac.Tool'
     
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact'
