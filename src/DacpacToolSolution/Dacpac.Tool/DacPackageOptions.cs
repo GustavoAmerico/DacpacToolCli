@@ -91,11 +91,11 @@ namespace Dacpac.Tool
             }
             foreach (var dbName in _dataBaseNames.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (UseSspi && (string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId)))
-                {
-                    Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";
-                }
-                else if (Password.Length > 1)
+                if(string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId)){
+                    if (UseSspi)
+                    {Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";}                  
+                }                
+                else 
                 {
                     Connections[dbName] =
                         $"Data Source={Server};User Id={UserId};Password={Password};Integrated Security=False;Application Name=SqlPackageUpdate";
