@@ -1,5 +1,5 @@
 variables:
-  versionBase: '1.0'
+  versionBase: '1.1'
   tool_version: $(versionBase).$(Build.BuildId)
 
 trigger:
@@ -17,19 +17,19 @@ steps:
   displayName: dotnet restore
   inputs:
     command: restore
-    projects: '.netTool/Dacpac.Tool/*.csproj'
+    projects: 'src/DacpacToolSolution/*.csproj'
 
 - task: DotNetCoreCLI@2
   displayName: dotnet build
   inputs:
-    projects: '.netTool/Dacpac.Tool/*.csproj'
+    projects: 'src/DacpacToolSolution/*.csproj'
     arguments: '/p:Version=$(tool_version) /p:PackageVersion=$(tool_version)'
 
 - task: DotNetCoreCLI@2
   displayName: dotnet pack
   inputs:
     command: pack
-    packagesToPack: '.netTool/Dacpac.Tool/*.csproj'
+    packagesToPack: 'src/DacpacToolSolution/*.csproj'
     versioningScheme: 'Off'
     packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
     buildProperties: 'PackageVersion=$(tool_version)'
