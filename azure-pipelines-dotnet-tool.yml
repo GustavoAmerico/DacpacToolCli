@@ -8,28 +8,33 @@ trigger:
      - master 
   paths:
     include:
-     - '.netTool/*'
+     - 'src/DacpacToolSolution/*'
      - 'azure-pipelines-dotnet-tool.yml'
      
 name: $(versionBase).$(Build.BuildId)
+
+pool: 
+  vmImage: ubuntu-latest
+  
 steps:
 - task: DotNetCoreCLI@2
   displayName: dotnet restore
   inputs:
-    command: restore
-    projects: 'src/DacpacToolSolution/*.csproj'
+   workingDirectory: src/DacpacToolSolution/
+   command: restore
 
 - task: DotNetCoreCLI@2
   displayName: dotnet build
   inputs:
-    projects: 'src/DacpacToolSolution/*.csproj'
+    workingDirectory: src/DacpacToolSolution/
     arguments: '/p:Version=$(tool_version) /p:PackageVersion=$(tool_version)'
 
 - task: DotNetCoreCLI@2
   displayName: dotnet pack
   inputs:
     command: pack
-    packagesToPack: 'src/DacpacToolSolution/*.csproj'
+    workingDirectory: src/DacpacToolSolution/
+    packagesToPack: 'Dacpac.Tool/Dacpac.Tool.csproj'
     versioningScheme: 'Off'
     packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
     buildProperties: 'PackageVersion=$(tool_version)'
