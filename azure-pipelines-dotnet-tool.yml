@@ -13,34 +13,31 @@ trigger:
      
 name: $(versionBase).$(Build.BuildId)
 
-pool: 
-  vmImage: ubuntu-latest
-  
-steps:
-- task: DotNetCoreCLI@2
-  displayName: dotnet restore
-  inputs:
-   workingDirectory: src/DacpacToolSolution/
-   command: restore
-
-- task: DotNetCoreCLI@2
-  displayName: dotnet build
-  inputs:
-    workingDirectory: src/DacpacToolSolution/
-    arguments: '/p:Version=$(tool_version) /p:PackageVersion=$(tool_version)'
-
-- task: DotNetCoreCLI@2
-  displayName: dotnet pack
-  inputs:
-    command: pack
-    workingDirectory: src/DacpacToolSolution/
-    packagesToPack: 'Dacpac.Tool/Dacpac.Tool.csproj'
-    versioningScheme: 'Off'
-    packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
-    buildProperties: 'PackageVersion=$(tool_version)'
-    verbosityPack: Normal
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)\artifact'
+jobs:
+  - job: BUILD
+    displayName: Build and Nuget Push
+    pool: 
+      vmImage: ubuntu-latest      
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: dotnet build
+      inputs:
+        workingDirectory: src/DacpacToolSolution/
+        arguments: '/p:Version=$(tool_version) /p:PackageVersion=$(tool_version)'
+    
+    - task: DotNetCoreCLI@2
+      displayName: dotnet pack
+      inputs:
+        command: pack
+        workingDirectory: src/DacpacToolSolution/
+        packagesToPack: 'Dacpac.Tool/Dacpac.Tool.csproj'
+        versioningScheme: 'Off'
+        packDirectory: '$(Build.ArtifactStagingDirectory)\artifact'
+        buildProperties: 'PackageVersion=$(tool_version)'
+        verbosityPack: Normal
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)\artifact'
+    
