@@ -55,6 +55,7 @@ namespace Dacpac.Tool
                 dacService.ProgressChanged += DacService_ProgressChanged;
                 dacService.Deploy(package, connection.Key, true, option);
                 Console.WriteLine("Finished {0}", connection.Key);
+                Console.ResetColor();
             }
         }
 

@@ -13,6 +13,9 @@ namespace Dacpac.Tool
 
         public IDictionary<string, string> Connections { get; set; } = new Dictionary<string, string>();
 
+        /// <summary>Obtém e envia a connection string que deve ser utilizada para publicar o dacpac</summary>
+        public string ConnectionString { get; set; }
+
         /// <summary>Lista de banco de dados que deve ser atualizada/criado</summary>
         public string DataBaseNames
         {
@@ -43,6 +46,7 @@ namespace Dacpac.Tool
         public bool UseSspi { get; set; } = true;
 
         public string UserId { get; set; } = "carioca";
+
 
         /// <summary>Find by dacpac file in directory</summary>
         public Microsoft.SqlServer.Dac.DacPackage FindDacPackage()
@@ -79,29 +83,51 @@ namespace Dacpac.Tool
         {
 
             if (_connectionIsLoad) return;
-            if (string.IsNullOrWhiteSpace(Server))
+            TryDeserializerConnectionString();
+            if (!string.IsNullOrWhiteSpace(_dataBaseNames) && !string.IsNullOrWhiteSpace(Server))
             {
-                Console.Error.WriteLine("The target server is requerid, send with --Server=mydb.server.mydomain.com,1433");
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(_dataBaseNames))
-            {
-                Console.Error.WriteLine("The target database name is requerid, send with --databasenames=mydb");
-                return;
-            }
-            foreach (var dbName in _dataBaseNames.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                if(string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId)){
-                    if (UseSspi)
-                    {Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";}                  
-                }                
-                else 
+                foreach (var dbName in _dataBaseNames.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    Connections[dbName] =
-                        $"Data Source={Server};User Id={UserId};Password={Password};Integrated Security=False;Application Name=SqlPackageUpdate";
+                    if (string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId) || UseSspi)
+                    {
+                        Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";
+
+                    }
+                    else
+                    {
+                        Connections[dbName] =
+                            $"Data Source={Server};User Id={UserId};Password={Password};Integrated Security=False;Application Name=SqlPackageUpdate";
+                    }
                 }
             }
+
+            if (!Connections.Any())
+            {
+                Console.Error.WriteLine("Your must be define the connection string, see example:");
+                Console.Error.WriteLine("1. --server=<ip or damain> --databasenames=<database name or multi db name separated by ;> --userId=<user with permission> --password=<user password>");
+                Console.Error.WriteLine("2. --ConnectionString='Data Source={Server};User Id={UserId};Password={Password}'");
+
+            }
+
             _connectionIsLoad = true;
+        }
+
+        private void TryDeserializerConnectionString()
+        {
+            if (string.IsNullOrWhiteSpace(ConnectionString)) return;
+            try
+            {
+                var connString = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(ConnectionString.Trim());
+                Connections[connString.InitialCatalog] = connString.IntegratedSecurity
+                    ? $"Integrated Security=SSPI;Persist Security Info=False;Data Source={connString.DataSource};Application Name=SqlPackageUpdate"
+                    : $"Data Source={connString.DataSource};User Id={connString.UserID};Password={connString.Password};Integrated Security=False;Application Name=SqlPackageUpdate";
+            }
+            catch (Exception e)
+            {
+
+            }
+
+
         }
 
         ///<summary>Run the command</summary>

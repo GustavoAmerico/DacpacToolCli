@@ -1,5 +1,5 @@
 variables:
-  versionBase: '2.1.0'
+  versionBase: '2.2.0'
   tool_version: $(versionBase).$(Build.BuildId)
 
 trigger:
@@ -24,7 +24,13 @@ jobs:
         targetType: 'inline'
         script: 'dotnet pack Dacpac.Tool.csproj /p:Version=$(tool_version) /p:PackageVersion=$(tool_version) -o $(Build.ArtifactStagingDirectory)/artifact'
         workingDirectory: 'src/DacpacToolSolution/Dacpac.Tool'
-    
+
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: 'dotnet pack Microsoft.SqlServer.DacFx.Extensions.csproj /p:Version=$(tool_version) /p:PackageVersion=$(tool_version) --include-source -o $(Build.ArtifactStagingDirectory)/artifact'
+        workingDirectory: 'src/DacpacToolSolution/Microsoft.SqlServer.DacFx.Extensions'
+        
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact'
       inputs:

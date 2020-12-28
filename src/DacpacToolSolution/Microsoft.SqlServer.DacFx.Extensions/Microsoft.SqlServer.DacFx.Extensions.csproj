@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;netcoreapp2.1;netcoreapp2.2</TargetFrameworks>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <Authors>Gustavo Américo</Authors>
+    <Company>GAG Tech</Company>
+    <Product>SQL Server Deploy</Product>
+    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/GustavoAmerico/SQLServerDeploy/master/SQLServerDeploy/images/icon.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/GustavoAmerico/SQLServerDeploy/</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>sqlserver; dacpac;deploy;ci;dotnet-tool</PackageTags>
+    <PackageProjectUrl>https://github.com/GustavoAmerico/SQLServerDeploy/</PackageProjectUrl>
+    <Copyright>Gustavo Américo</Copyright>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SqlServer.DacFx" Version="150.4897.1" />
+    <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>
