@@ -45,7 +45,7 @@ namespace Dacpac.Tool
         /// </summary>
         public bool UseSspi { get; set; } = true;
 
-        public string UserId { get; set; } = "carioca";
+        public string UserId { get; set; } = "";
 
 
         /// <summary>Find by dacpac file in directory</summary>

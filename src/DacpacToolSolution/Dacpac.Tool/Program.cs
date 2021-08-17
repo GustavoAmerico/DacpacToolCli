@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.SqlServer.Dac;
 using System;
+using System.CommandLine;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Dacpac.Tool.Commands;
 
 namespace Dacpac.Tool
 {
@@ -13,24 +15,26 @@ namespace Dacpac.Tool
 
         public const string DacDeployOptionsKey = "DacDeployOptions";
 
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             args = args?.SkipWhile(string.IsNullOrWhiteSpace).ToArray();
 
-            if (args?.Any() == false || args[0].Equals("version", StringComparison.CurrentCultureIgnoreCase))
-            {
-                Console.WriteLine("Version: {0}", Version());
-#if DEBUG
-                Main(Console.ReadLine()?.Split(" "));
-#endif
-            }
-            else if (args[0].Equals("publish", StringComparison.CurrentCultureIgnoreCase))
+            if (args?.Any() == true && args[0].Equals("publish", StringComparison.CurrentCultureIgnoreCase))
             {
                 ConfigurationBuild(args);
-                Publish();
+                var option = _configuration.GetSection(DacDeployOptionsKey)
+                                 .Get<DacDeployOptions>() ?? new DacDeployOptions();
+                var dacPackageOptions = _configuration
+                                            .Get<DacPackageOptions>() ?? new DacPackageOptions();
+                PublishCommand.Run(dacPackageOptions, option).GetAwaiter().GetResult();
+                Finished();
+                return 0;
             }
 
-            Finished();
+            var root = new RootCommand();
+            root.AddCommand(new PublishCommand());
+
+            return root.Invoke(args);
         }
 
         private static void Finished()
@@ -39,43 +43,6 @@ namespace Dacpac.Tool
             Thread.Sleep(200);
         }
 
-        private static void Publish()
-        {
-            var option = _configuration.GetSection(DacDeployOptionsKey).Get<DacDeployOptions>() ??
-                         new DacDeployOptions();
-            var dacPackageOptions = _configuration.Get<DacPackageOptions>() ??
-                                    new DacPackageOptions();
-
-            var package = dacPackageOptions.FindDacPackage();
-            foreach (var connection in dacPackageOptions.Connections)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Starting deploy on {0}", connection.Key);
-                var dacService = new DacServices(connection.Value);
-                dacService.ProgressChanged += DacService_ProgressChanged;
-                dacService.Deploy(package, connection.Key, true, option);
-                Console.WriteLine("Finished {0}", connection.Key);
-                Console.ResetColor();
-            }
-        }
-
-        private static void DacService_ProgressChanged(object sender, DacProgressEventArgs e)
-        {
-            Console.WriteLine($"{e.Message}: {DateTimeOffset.Now:HH:mm:sss tt zzzz}");
-            if (e.Status == DacOperationStatus.Completed)
-            {
-                Console.WriteLine("-".PadRight(15, '-'));
-            }
-        }
-
-        private static string Version()
-        {
-            var versionString = Assembly.GetEntryAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                .InformationalVersion
-                .ToString();
-            return versionString;
-        }
 
         private static void ConfigurationBuild(string[] args)
         {
