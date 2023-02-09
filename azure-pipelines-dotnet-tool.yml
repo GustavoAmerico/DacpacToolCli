@@ -1,5 +1,5 @@
 variables:
-  versionBase: '2.3.0'
+  versionBase: '3.0'
   tool_version: $(versionBase).$(Build.BuildId)
 
 trigger:
