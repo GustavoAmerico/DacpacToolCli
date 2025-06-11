@@ -88,24 +88,17 @@ namespace Dacpac.Tool
             {
                 foreach (var dbName in _dataBaseNames.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId) || UseSspi)
-                    {
-                        Connections[dbName] = $"Integrated Security=SSPI;Persist Security Info=False;Data Source={Server};Application Name=SqlPackageUpdate";
-
-                    }
-                    else
-                    {
-                        Connections[dbName] =
-                            $"Data Source={Server};User Id={UserId};Password={Password};Integrated Security=False;Application Name=SqlPackageUpdate";
-                    }
+                    Connections[dbName] = string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserId) || UseSspi
+                        ? BuildConnectionString(Server, null, null)
+                        : BuildConnectionString(Server, UserId, Password);
                 }
             }
 
             if (!Connections.Any())
             {
                 Console.Error.WriteLine("Your must be define the connection string, see example:");
-                Console.Error.WriteLine("1. --server=<ip or damain> --databasenames=<database name or multi db name separated by ;> --userId=<user with permission> --password=<user password>");
-                Console.Error.WriteLine("2. --ConnectionString='Data Source={Server};User Id={UserId};Password={Password}'");
+                Console.Error.WriteLine("1. --server=<ip or damain> --databasenames=<database name or multi db name separated by ;> --userId=<user with permission> --password=<user password>;TrustServerCertificate=true");
+                Console.Error.WriteLine("2. --ConnectionString='Data Source={Server};User Id={UserId};Password={Password}';TrustServerCertificate=true");
 
             }
 
@@ -118,16 +111,23 @@ namespace Dacpac.Tool
             try
             {
                 var connString = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(ConnectionString.Trim());
-                Connections[connString.InitialCatalog] = connString.IntegratedSecurity
-                    ? $"Integrated Security=SSPI;Persist Security Info=False;Data Source={connString.DataSource};Application Name=SqlPackageUpdate"
-                    : $"Data Source={connString.DataSource};User Id={connString.UserID};Password={connString.Password};Integrated Security=False;Application Name=SqlPackageUpdate";
+                Connections[connString.InitialCatalog] = BuildConnectionString(connString.DataSource, connString.UserID, connString.Password);
             }
             catch (Exception e)
             {
-
+                Console.Error.WriteLine($"Error: {e}");
             }
 
 
+        }
+
+        private string BuildConnectionString(string dataSource, string? userId, string? password)
+        {
+            string userInfo = string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(password)
+                ? "Integrated Security=SSPI"
+                : $"User Id={userId};Password={password};Integrated Security=False";
+
+            return $"Data Source={dataSource};Application Name=SqlPackageUpdate;TrustServerCertificate=true;{userInfo};";
         }
 
         ///<summary>Run the command</summary>

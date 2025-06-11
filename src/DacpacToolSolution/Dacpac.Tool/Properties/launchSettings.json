@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Dacpac.Tool": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": " pub server -u 'sa' -p _4ut0m@t!cT35t1 -s 'localhost,1433' --dbs 'BlueOpex2' -d '.' -f 'Downloads/BlueOpex*.dacpac' CreateNewDatabase=$True"
     }
   }
 }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+	<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <ToolCommandName>dotnet-dacpac</ToolCommandName>
@@ -15,7 +15,7 @@ A data-tier application (DAC) is a logical database management entity that defin
 
 ### Requirements
 
-1. .NET Core 2.1+ runtime installed
+1. .NET Core 8.0+ runtime installed
 
 ### Publish .dacpac with .Net tool
 
@@ -71,11 +71,11 @@ dotnet dacpac publish --dacpath=C:\artifact\db\ --server=mydatabase.server.conto
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
-    <PackageReference Include="Microsoft.SqlServer.DacFx" Version="161.6374.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.6" />
+    <PackageReference Include="Microsoft.SqlServer.DacFx" Version="170.0.94" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>
 

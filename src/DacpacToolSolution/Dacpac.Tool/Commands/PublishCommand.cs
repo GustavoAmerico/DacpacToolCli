@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -168,13 +169,18 @@ namespace Dacpac.Tool.Commands
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Starting deploy on {0}", connection.Key);
+
                 var dacService = new DacServices(connection.Value);
+                var stop = new Stopwatch();
+                stop.Start();
                 dacService.ProgressChanged += (object sender, DacProgressEventArgs e) =>
                 {
-                    Console.WriteLine($"{e.Message}: {DateTimeOffset.Now:HH:mm:sss tt zzzz}");
-                    if (e.Status == DacOperationStatus.Completed)
+                    Console.WriteLine($"{e.Message}: {DateTimeOffset.Now:HH:mm:sss tt zzzz} ({stop.Elapsed})");
+                    if (e.Status == DacOperationStatus.Completed || e.Status == DacOperationStatus.Faulted)
                     {
+                        stop.Stop();
                         Console.WriteLine("-".PadRight(15, '-'));
+                        Console.WriteLine($"Atualização realizada em {stop.Elapsed}");
                     }
                 };
                 dacService.Deploy(package, connection.Key, true, option);
